@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,11 +11,8 @@
  *
  */
 
-package io.github.tedcolvin.flan
+package org.treexl
 
-class ParseError: RuntimeException() {
-
-}
 
 class Parser(private val tokens: List<Token>) {
     companion object {
@@ -34,7 +31,7 @@ class Parser(private val tokens: List<Token>) {
 
     }
 
-    var current = 0
+    private var current = 0
 
     fun parse(): Expression {
         return expression()
@@ -125,7 +122,26 @@ class Parser(private val tokens: List<Token>) {
             val right = unary()
             return Unary(operator, right)
         }
-        return identifier()
+        return parameter()
+    }
+
+    private fun parameter(): Expression {
+        if (match(TokenType.PARAMETER)) {
+            return Parameter(previous().lexeme)
+        }
+        return call()
+    }
+
+    private fun call(): Expression {
+        val expression = identifier()
+
+        if (expression is Identifier) {
+            if (match(TokenType.LEFT_PAREN)) {
+                return finishCall(expression)
+            }
+
+        }
+        return expression
     }
 
     private fun identifier(): Expression {
@@ -148,11 +164,25 @@ class Parser(private val tokens: List<Token>) {
             return Grouping(expr)
         }
 
-        throw error(peek(), "Expect expression.");
+        throw error(peek(), "Expect expression.")
+    }
+
+    private fun finishCall(callee: Identifier): Expression {
+        val arguments = mutableListOf<Expression>()
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                arguments.add(expression())
+            } while (match(TokenType.COMMA))
+        }
+        val paren = consume(
+            TokenType.RIGHT_PAREN,
+            "Expect ')' after arguments."
+        )
+        return Call(callee, paren, arguments)
     }
 
     private fun error(token: Token, message: String): ParseError {
-        Parser.error(token, message)
+        Companion.error(token, message)
         return ParseError()
     }
 }

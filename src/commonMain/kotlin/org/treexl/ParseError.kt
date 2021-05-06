@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,20 +11,8 @@
  *
  */
 
-package io.github.tedcolvin.flan
+package org.treexl
 
-interface Visitor {
-
-    fun visit(expression: Literal<*>)
-
-    fun visit(expression: Unary)
-
-    fun visit(expression: Binary)
-
-    fun visit(expression: Grouping)
-
-    fun visit(expression: Identifier)
-
-
+class ParseError: RuntimeException() {
 
 }

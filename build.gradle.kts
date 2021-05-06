@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -14,13 +14,24 @@
 plugins {
     kotlin("multiplatform") version "1.4.31"
     id("maven-publish")
+    id("org.jetbrains.dokka") version "1.4.20"
+    //signing
 }
 
-group = "io.github.tedcolvin.flan"
-version = "0.1"
+group = "org.treexl"
+version = "0.2"
 
 repositories {
     mavenCentral()
+    jcenter()
+}
+
+val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+
+val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
+    dependsOn(dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from(dokkaHtml.outputDirectory)
 }
 
 kotlin {
@@ -74,5 +85,49 @@ kotlin {
         }
         val nativeMain by getting
         val nativeTest by getting
+    }
+}
+
+publishing {
+    publications.withType<MavenPublication> {
+        artifact(javadocJar)
+        pom {
+            val projectGitUrl = "https://github.com/tedcolvin/treexl"
+            name.set(rootProject.name)
+            description.set("Flan - Filter Language")
+            url.set(projectGitUrl)
+            inceptionYear.set("2021")
+            licenses {
+                license {
+                    name.set("Apache 2.0")
+                    url.set("http://www.apache.org/licenses/")
+                }
+            }
+            developers {
+                developer {
+                    id.set("tedcolvin")
+                    name.set("Ted Colvin")
+                    email.set("tedcolvin@outlook.com")
+                    url.set("https://github.io/tedcolvin")
+                }
+            }
+            issueManagement {
+                system.set("GitHub")
+                url.set("$projectGitUrl/issues")
+            }
+            scm {
+                connection.set("scm:git:$projectGitUrl")
+                developerConnection.set("scm:git:$projectGitUrl")
+                url.set(projectGitUrl)
+            }
+        }
+        //the<SigningExtension>().sign(this)
+    }
+    repositories {
+        maven {
+            name = "sonatypeStaging"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials(PasswordCredentials::class)
+        }
     }
 }

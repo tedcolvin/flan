@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,7 +11,7 @@
  *
  */
 
-package io.github.tedcolvin.flan
+package org.treexl
 
 internal class Scanner(private val source: CharSequence) {
     private val tokens = arrayListOf<Token>()
@@ -53,6 +53,12 @@ internal class Scanner(private val source: CharSequence) {
 
             '\'' -> string()
 
+            ':' -> {
+                if (isAlpha(peek())) {
+                    parameter()
+                }
+            }
+
             '\t', ' ', '\r' -> {
                 //noop
             }
@@ -73,6 +79,13 @@ internal class Scanner(private val source: CharSequence) {
                 }
             }
         }
+    }
+
+    private fun parameter() {
+
+        while (isAlphaNumeric(peek())) advance()
+        val text = source.substring(start + 1, current)
+        tokens.add(Token(TokenType.PARAMETER, text, null, line))
     }
 
     private fun parseError(s: String) {
@@ -168,101 +181,5 @@ internal class Scanner(private val source: CharSequence) {
         val text = source.substring(start, current)
         addToken(TokenType[text] ?: TokenType.IDENTIFIER)
     }
-
 }
 
-
-enum class TokenType(val keyword: String? = null) {
-
-    // Single-character tokens.
-    LEFT_PAREN, RIGHT_PAREN, COMMA, DOT,
-
-    // One or two character tokens.
-    EQUAL, DIFFERENT, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
-
-    // Literals.
-    IDENTIFIER,
-
-    STRING {
-        override fun isLiteral() = true
-    },
-
-    NUMBER  {
-        override fun isLiteral() = true
-    },
-
-    // Keywords.
-    AND("and"),
-    FALSE("false"),
-    NULL("null"),
-    OR("or"),
-    TRUE("true"),
-    NOT("not"),
-    IS("is"),
-    IN("in"),
-    LIKE("like"),
-    BETWEEN("between"),
-    MINUS("minus"),
-
-    EOF
-    ;
-
-    open fun isLiteral() = false
-
-    companion object {
-        operator fun get(text: String): TokenType? {
-            return keywords[text]
-        }
-
-        private val keywords = values().mapNotNull { type ->
-            type.keyword?.let { kw ->
-                kw to type
-            }
-        }.toMap()
-    }
-
-}
-
-class Token(val type: TokenType, lexeme: String, val literal: Any? = null, val line: Int = -1) {
-    //optmization to reuse shared interned strings.
-    val lexeme = type.keyword ?: lexeme
-
-    override fun toString(): String {
-        val sb = StringBuilder()
-        sb.append(type)
-
-        if (lexeme.isNotEmpty()) {
-            sb.append(" [").append(lexeme).append("]")
-        }
-
-        if (type.isLiteral()) {
-            sb.append(" ").append(literal)
-        }
-
-//        if (line != -1) {
-//            sb.append(" (line: ").append(line).append(")")
-//        }
-
-        return sb.toString()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Token) return false
-
-        if (type != other.type) return false
-        if (lexeme != other.lexeme) return false
-        if (literal != other.literal) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = type.hashCode()
-        result = 31 * result + lexeme.hashCode()
-        result = 31 * result + (literal?.hashCode() ?: 0)
-        return result
-    }
-
-
-}

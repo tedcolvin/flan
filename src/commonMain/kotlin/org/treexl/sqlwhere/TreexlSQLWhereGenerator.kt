@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,30 +11,32 @@
  *
  */
 
-package io.github.tedcolvin.flan.sqlwhere
+package org.treexl.sqlwhere
 
-import io.github.tedcolvin.flan.Binary
-import io.github.tedcolvin.flan.Flan
-import io.github.tedcolvin.flan.Grouping
-import io.github.tedcolvin.flan.Identifier
-import io.github.tedcolvin.flan.Literal
-import io.github.tedcolvin.flan.TokenType
-import io.github.tedcolvin.flan.Unary
-import io.github.tedcolvin.flan.Visitor
+import org.treexl.Binary
+import org.treexl.Call
+import org.treexl.Treexl
+import org.treexl.Grouping
+import org.treexl.Identifier
+import org.treexl.Literal
+import org.treexl.Parameter
+import org.treexl.TokenType
+import org.treexl.Unary
+import org.treexl.Visitor
 
-class FlanSQLWhereGenerator(val flan: Flan = Flan()) {
+class TreexlSQLWhereGenerator(private val treexl: Treexl = Treexl(), private val quoter: (Appendable) -> Unit = { it.append("''") }) {
 
-    fun parse(flanExpression: String): String {
+    fun parse(treexlExpression: String): String {
         val stringBuilder = StringBuilder()
-        val visitor = SQLVisitor(stringBuilder)
-        val expr = flan.parse(flanExpression)
+        val visitor = SQLVisitor(stringBuilder, quoter)
+        val expr = treexl.parse(treexlExpression)
         expr.visit(visitor)
         return stringBuilder.toString()
     }
 
 }
 
-class SQLVisitor(private val appendable: Appendable) : Visitor {
+class SQLVisitor(private val appendable: Appendable, private val quoter: (Appendable) -> Unit) : Visitor {
     override fun visit(expression: Literal<*>) {
         when (val value = expression.value) {
             is Int -> appendable.append(value.toString())
@@ -43,7 +45,15 @@ class SQLVisitor(private val appendable: Appendable) : Visitor {
 
             is String -> {
                 appendable.append("'")
-                appendable.append(value)
+
+                value.forEach {
+                    if (it == '\'') {
+                        quoter(appendable)
+                    } else {
+                        appendable.append(it)
+                    }
+                }
+
                 appendable.append("'")
             }
 
@@ -63,9 +73,7 @@ class SQLVisitor(private val appendable: Appendable) : Visitor {
                 appendable.append("not ")
             }
 
-            else -> {
-                error("Invalid unary operator: ${expression.operator}")
-            }
+            else -> error("Invalid unary operator: ${expression.operator}")
         }
 
         expression.right.visit(this)
@@ -119,4 +127,24 @@ class SQLVisitor(private val appendable: Appendable) : Visitor {
         appendable.append(expression.name)
     }
 
+    override fun visit(expression: Parameter) {
+        appendable.append("\${")
+        appendable.append(expression.name)
+        appendable.append("}")
+    }
+
+    override fun visit(expression: Call) {
+        appendable.append(expression.identifier.name)
+        appendable.append("(")
+
+        expression.arguments.forEachIndexed { i, arg ->
+            if (i > 0) {
+                appendable.append(", ")
+            }
+            arg.visit(this)
+        }
+
+        appendable.append(")")
+    }
 }
+

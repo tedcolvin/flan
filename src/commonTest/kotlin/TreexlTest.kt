@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,12 +11,26 @@
  *
  */
 
-package io.github.tedcolvin.flan
+package org.treexl
 
+import org.treexl.AbstractRewriter
+import org.treexl.Binary
+import org.treexl.Call
+import org.treexl.Expression
+import org.treexl.Grouping
+import org.treexl.Identifier
+import org.treexl.Literal
+import org.treexl.Parameter
+import org.treexl.Scanner
+import org.treexl.Token
+import org.treexl.TokenType
+import org.treexl.Treexl
+import org.treexl.TreexlOptions
+import org.treexl.Unary
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class FlanTest {
+class TreexlTest {
 
     @Test
     fun testScannerOneToken() {
@@ -42,7 +56,7 @@ class FlanTest {
 
         assertScanAs("'FOO'", Token(TokenType.STRING, "'FOO'", literal = "FOO"))
 
-        assertScanAs("123", Token(TokenType.NUMBER, "123", literal = 123.0))
+        assertScanAs("123", Token(TokenType.NUMBER, "123", literal = 123))
 
         assertScanAs("123.0", Token(TokenType.NUMBER, "123.0", literal = 123.0))
 
@@ -82,31 +96,31 @@ class FlanTest {
         assertEquals(expectedTokens.toList(), tokens.subList(0, tokens.size - 1))
     }
 
-    val flan = Flan()
+    private val treexl = Treexl()
 
     @Test
     fun testLiterals() {
-        val flan = Flan()
-        assertEquals(Literal(1), flan.parse("1"))
-        assertEquals(Literal(1.0), flan.parse("1.0"))
+        val treexl = Treexl()
+        assertEquals(Literal(1), treexl.parse("1"))
+        assertEquals(Literal(1.0), treexl.parse("1.0"))
 
-        assertEquals(Literal(null), flan.parse("null"))
+        assertEquals(Literal(null), treexl.parse("null"))
 
-        assertEquals(Literal("string"), flan.parse("'string'"))
-        assertEquals(Literal(""), flan.parse("''"))
-        assertEquals(Literal("1"), flan.parse("'1'"))
+        assertEquals(Literal("string"), treexl.parse("'string'"))
+        assertEquals(Literal(""), treexl.parse("''"))
+        assertEquals(Literal("1"), treexl.parse("'1'"))
 
-        assertEquals(Literal(true), flan.parse("true"))
-        assertEquals(Literal(false), flan.parse("false"))
+        assertEquals(Literal(true), treexl.parse("true"))
+        assertEquals(Literal(false), treexl.parse("false"))
     }
 
     @Test
     fun testUnaries() {
-        assertEquals(Unary(Token(TokenType.MINUS, "-"), Literal(1)), flan.parse("-1"))
-        assertEquals(Unary(Token(TokenType.MINUS, "-"), Literal(1.0)), flan.parse("-1.0"))
+        assertEquals(Unary(Token(TokenType.MINUS, "-"), Literal(1)), treexl.parse("-1"))
+        assertEquals(Unary(Token(TokenType.MINUS, "-"), Literal(1.0)), treexl.parse("-1.0"))
 
-        assertEquals(Unary(Token(TokenType.NOT, "not"), Literal(true)), flan.parse("not true"))
-        assertEquals(Unary(Token(TokenType.NOT, "not"), Literal(false)), flan.parse("not false"))
+        assertEquals(Unary(Token(TokenType.NOT, "not"), Literal(true)), treexl.parse("not true"))
+        assertEquals(Unary(Token(TokenType.NOT, "not"), Literal(false)), treexl.parse("not false"))
 
         assertEquals(
             Unary(
@@ -115,7 +129,8 @@ class FlanTest {
                     Token(TokenType.NOT, "not"),
                     Literal(true)
                 )
-            ), flan.parse("not not true"))
+            ), treexl.parse("not not true")
+        )
 
     }
 
@@ -127,7 +142,7 @@ class FlanTest {
                 Token(TokenType.EQUAL, "="),
                 Literal("1")
             ),
-            flan.parse("1 = '1'")
+            treexl.parse("1 = '1'")
         )
 
         assertEquals(
@@ -136,7 +151,7 @@ class FlanTest {
                 Token(TokenType.DIFFERENT, "<>"),
                 Literal("1")
             ),
-            flan.parse("1 <> '1'")
+            treexl.parse("1 <> '1'")
         )
 
         assertEquals(
@@ -145,7 +160,7 @@ class FlanTest {
                 Token(TokenType.GREATER, ">"),
                 Literal("1")
             ),
-            flan.parse("1 > '1'")
+            treexl.parse("1 > '1'")
         )
 
         assertEquals(
@@ -154,7 +169,7 @@ class FlanTest {
                 Token(TokenType.GREATER_EQUAL, ">="),
                 Literal("1")
             ),
-            flan.parse("1 >= '1'")
+            treexl.parse("1 >= '1'")
         )
 
         assertEquals(
@@ -163,7 +178,7 @@ class FlanTest {
                 Token(TokenType.LESS, "<"),
                 Literal("1")
             ),
-            flan.parse("1 < '1'")
+            treexl.parse("1 < '1'")
         )
 
         assertEquals(
@@ -172,7 +187,7 @@ class FlanTest {
                 Token(TokenType.LESS_EQUAL, "<="),
                 Literal("1")
             ),
-            flan.parse("1 <= '1'")
+            treexl.parse("1 <= '1'")
         )
 
         assertEquals(
@@ -181,7 +196,7 @@ class FlanTest {
                 Token(TokenType.AND, "and"),
                 Literal("1")
             ),
-            flan.parse("1 and '1'")
+            treexl.parse("1 and '1'")
         )
 
         assertEquals(
@@ -190,7 +205,7 @@ class FlanTest {
                 Token(TokenType.OR, "or"),
                 Literal("1")
             ),
-            flan.parse("1 or '1'")
+            treexl.parse("1 or '1'")
         )
 
         assertEquals(
@@ -203,26 +218,66 @@ class FlanTest {
                     Literal(3)
                 ),
             ),
-            flan.parse("1 or 2 and 3")
+            treexl.parse("1 or 2 and 3")
         )
 
     }
 
     @Test
     fun testGrouping() {
-        assertEquals(Grouping(Literal(1)), flan.parse("(1)"))
+        assertEquals(Grouping(Literal(1)), treexl.parse("(1)"))
 
-        assertEquals(Binary(
-            Grouping(
-                Binary(
-                    Literal(1),
-                    Token(TokenType.OR, "or"),
-                    Literal(2)
-                )
+        assertEquals(
+            Binary(
+                Grouping(
+                    Binary(
+                        Literal(1),
+                        Token(TokenType.OR, "or"),
+                        Literal(2)
+                    )
+                ),
+                Token(TokenType.AND, "and"),
+                Literal(3)
+            ), treexl.parse("(1 or 2) and 3")
+        )
+
+    }
+
+    @Test
+    fun testParameters() {
+        assertEquals(Parameter("A"), treexl.parse(":A"))
+        assertEquals(Binary(Parameter("A"), Token(TokenType.EQUAL, "="), Identifier("A")), treexl.parse(":A = A"))
+    }
+
+    @Test
+    fun testFunctions() {
+        assertEquals(
+            Call(
+                Identifier("uppercase"),
+                Token(TokenType.RIGHT_PAREN, ")"),
+                listOf(Literal("x"))
             ),
-            Token(TokenType.AND, "and"),
-            Literal(3)
-        ), flan.parse("(1 or 2) and 3"))
+            treexl.parse("uppercase('x')")
+        )
+    }
+
+    @Test
+    fun testRewrites() {
+        class LiteralReplacer : AbstractRewriter() {
+            val literals = mutableListOf<Any?>()
+
+            override fun rewrite(expression: Literal<*>): Expression {
+                literals.add(expression.value)
+                return Parameter("_${literals.size}")
+            }
+
+        }
+
+        val replacer = LiteralReplacer()
+        val treexl = Treexl(TreexlOptions(rewriters = listOf(replacer)))
+
+        assertEquals(treexl.parse("A > :_1 and (B <> :_2 or C = :_3)"), treexl.parse("A > 1 and (B <> '2' or C = null)"))
+        assertEquals(listOf<Any?>(1, "2", null), replacer.literals)
 
     }
 

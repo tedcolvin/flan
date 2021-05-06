@@ -2,7 +2,7 @@
 
 #
 # /*
-# Flan (Filter language)
+# Treexl (Tree extensible expression language).
 # Copyright Ted Colvin (tedcolvin@outlook.com).
 #
 # Licensed under Apache License 2.0

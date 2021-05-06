@@ -1,6 +1,6 @@
 /*
  *
- * Flan (Filter language)
+ * Treexl (Tree extensible expression language).
  * Copyright Ted Colvin (tedcolvin@outlook.com).
  *
  * Licensed under Apache License 2.0
@@ -11,15 +11,15 @@
  *
  */
 
-package io.github.tedcolvin.flan
+package org.treexl
 
-import io.github.tedcolvin.flan.sqlwhere.FlanSQLWhereGenerator
+import org.treexl.sqlwhere.TreexlSQLWhereGenerator
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class FlanSQLWhereGeneratorTest {
+class TreexlSQLWhereGeneratorTest {
 
-    val generator = FlanSQLWhereGenerator()
+    val generator = TreexlSQLWhereGenerator()
 
     @Test
     fun testSameExpression() {
