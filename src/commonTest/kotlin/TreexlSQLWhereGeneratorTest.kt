@@ -26,7 +26,8 @@ class TreexlSQLWhereGeneratorTest {
     fun testSameExpression() {
         assertInputEqualsOutput("1")
         assertInputEqualsOutput("'1'")
-        assertInputEqualsOutput("1.0")
+        assertInputEqualsOutput("1.1")
+        assertInputEqualsOutput("1.0".toDouble().toString())
         assertInputEqualsOutput("'1.0'")
         assertInputEqualsOutput("1 and 1")
         assertInputEqualsOutput("1 or 1")
