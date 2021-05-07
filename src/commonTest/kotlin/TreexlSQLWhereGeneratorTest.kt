@@ -17,6 +17,7 @@ import org.treexl.sqlwhere.TreexlSQLWhereGenerator
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@ExperimentalStdlibApi
 class TreexlSQLWhereGeneratorTest {
 
     val generator = TreexlSQLWhereGenerator()
@@ -42,6 +43,25 @@ class TreexlSQLWhereGeneratorTest {
         assertInputEqualsOutput("X")
         assertInputEqualsOutput("X or Y")
         assertInputEqualsOutput("X = 1 or Y = 2")
+    }
+
+    @Test
+    fun testAppend() {
+        class IdentifierToUpperCase : AbstractRewriter() {
+            override fun rewrite(expression: Identifier): Expression {
+                return if (expression.name.any { it.toUpperCase() != it }) {
+                    Identifier(expression.name.toUpperCase())
+                } else {
+                    expression
+                }
+            }
+        }
+
+        val treexl = Treexl(Treexl.Options(listOf(IdentifierToUpperCase())))
+
+        val appendable = StringBuilder()
+        generator.appendSQL(appendable, treexl.parse("a = B and c < D"))
+        assertEquals("A = B and C < D", appendable.toString())
     }
 
     private fun assertInputEqualsOutput(s: String) {

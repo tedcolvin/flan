@@ -13,6 +13,6 @@
 
 package org.treexl
 
-class ParseError: RuntimeException() {
+class ParseError(message: String): RuntimeException(message) {
 
 }

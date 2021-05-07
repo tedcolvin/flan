@@ -89,8 +89,7 @@ internal class Scanner(private val source: CharSequence) {
     }
 
     private fun parseError(s: String) {
-        println("Parse error ($line:$current): $s")
-        throw ParseError()
+        throw ParseError("Parse error ($line:$current): $s")
     }
 
     private fun isAtEnd(): Boolean {

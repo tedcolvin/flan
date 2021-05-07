@@ -15,23 +15,41 @@ package org.treexl.sqlwhere
 
 import org.treexl.Binary
 import org.treexl.Call
-import org.treexl.Treexl
+import org.treexl.Expression
 import org.treexl.Grouping
 import org.treexl.Identifier
 import org.treexl.Literal
 import org.treexl.Parameter
 import org.treexl.TokenType
+import org.treexl.Treexl
 import org.treexl.Unary
 import org.treexl.Visitor
 
-class TreexlSQLWhereGenerator(private val treexl: Treexl = Treexl(), private val quoter: (Appendable) -> Unit = { it.append("''") }) {
+
+class TreexlSQLWhereGenerator(private val options: Options) {
+
+    data class Options(
+        var treexl: Treexl = Treexl(),
+        var quoter: (Appendable) -> Unit = { it.append("''") }
+    )
+
+    companion object {
+        private val defaultOptions = Options()
+    }
+
+    constructor() : this(defaultOptions)
 
     fun parse(treexlExpression: String): String {
-        val stringBuilder = StringBuilder()
-        val visitor = SQLVisitor(stringBuilder, quoter)
+        val treexl = options.treexl
         val expr = treexl.parse(treexlExpression)
-        expr.visit(visitor)
+        val stringBuilder = StringBuilder()
+        appendSQL(stringBuilder, expr)
         return stringBuilder.toString()
+    }
+
+    fun appendSQL(appendable: Appendable, expression: Expression) {
+        val visitor = SQLVisitor(appendable, options.quoter)
+        expression.visit(visitor)
     }
 
 }

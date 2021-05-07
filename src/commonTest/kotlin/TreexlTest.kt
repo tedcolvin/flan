@@ -13,20 +13,7 @@
 
 package org.treexl
 
-import org.treexl.AbstractRewriter
-import org.treexl.Binary
-import org.treexl.Call
-import org.treexl.Expression
-import org.treexl.Grouping
-import org.treexl.Identifier
-import org.treexl.Literal
-import org.treexl.Parameter
-import org.treexl.Scanner
-import org.treexl.Token
-import org.treexl.TokenType
-import org.treexl.Treexl
-import org.treexl.TreexlOptions
-import org.treexl.Unary
+import org.treexl.rewriters.LiteralToParameterRewriter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -263,21 +250,21 @@ class TreexlTest {
 
     @Test
     fun testRewrites() {
-        class LiteralReplacer : AbstractRewriter() {
-            val literals = mutableListOf<Any?>()
 
-            override fun rewrite(expression: Literal<*>): Expression {
-                literals.add(expression.value)
-                return Parameter("_${literals.size}")
-            }
-
+        val values = mutableListOf<Any?>()
+        val rewriter = LiteralToParameterRewriter {
+            values.add(it)
+            "_${values.size}"
         }
 
-        val replacer = LiteralReplacer()
-        val treexl = Treexl(TreexlOptions(rewriters = listOf(replacer)))
+        val treexl = Treexl()
 
-        assertEquals(treexl.parse("A > :_1 and (B <> :_2 or C = :_3)"), treexl.parse("A > 1 and (B <> '2' or C = null)"))
-        assertEquals(listOf<Any?>(1, "2", null), replacer.literals)
+        assertEquals(
+            treexl.parse("A > :_1 and (B <> :_2 or C = :_3)"),
+            treexl.parse("A > 1 and (B <> '2' or C = null)").rewrite(rewriter)
+        )
+
+        assertEquals(listOf<Any?>(1, "2", null), values)
 
     }
 

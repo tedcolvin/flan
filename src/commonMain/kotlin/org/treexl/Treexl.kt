@@ -13,19 +13,21 @@
 
 package org.treexl
 
-class TreexlOptions(
-    val rewriters: List<Rewriter> = emptyList()
-)
 
 /**
- * Treexl - Filter Language
+ * Treexl (Tree extensible expression language) parser.
  *
- * Language based on SQL where subset used to filter collections.
+ * Parses Treexl expressions into an "expression tree" (AST).
+
  */
-class Treexl(private val options: TreexlOptions = TreexlOptions()) {
+class Treexl(private val options: Options = Options()) {
+    class Options(
+        val rewriters: List<Rewriter> = emptyList()
+    )
+
     fun parse(strExpr: String): Expression {
         if (strExpr.isBlank()) {
-            throw ParseError()
+            throw ParseError("Expression is blank (\"\").")
         }
         val tokens = Scanner(strExpr).scanTokens()
         val expression = Parser(tokens).parse()

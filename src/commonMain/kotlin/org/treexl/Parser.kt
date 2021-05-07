@@ -15,21 +15,6 @@ package org.treexl
 
 
 class Parser(private val tokens: List<Token>) {
-    companion object {
-
-        fun error(token: Token, message: String) {
-            if (token.type === TokenType.EOF) {
-                report(token.line, " at end", message)
-            } else {
-                report(token.line, " at '" + token.lexeme + "'", message)
-            }
-        }
-
-        private fun report(line: Int, s: String, message: String) {
-            println("$line: ($s) $message")
-        }
-
-    }
 
     private var current = 0
 
@@ -182,7 +167,11 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun error(token: Token, message: String): ParseError {
-        Companion.error(token, message)
-        return ParseError()
+        val msg = if (token.type === TokenType.EOF) {
+            "$[{token.line}] EOF: $message"
+        } else {
+            "[${token.line}] at '${token.lexeme}: '$message"
+        }
+        return ParseError(msg)
     }
 }
