@@ -23,11 +23,6 @@ import org.treexl.Parameter
  */
 class LiteralToParameterRewriter(private val literalCollector: (value: Any?) -> String) : AbstractRewriter() {
 
-    /**
-     * Contain collected values that were replaced by parameters.
-     */
-    val values = mutableListOf<Any?>()
-
     override fun rewrite(expression: Literal<*>): Expression {
         return Parameter(literalCollector(expression.value))
     }
