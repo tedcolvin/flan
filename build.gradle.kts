@@ -10,12 +10,13 @@
  *  additional information regarding copyright ownership.
  *
  */
+import java.util.Properties
 
 plugins {
     kotlin("multiplatform") version "1.4.31"
     id("maven-publish")
     id("org.jetbrains.dokka") version "1.4.20"
-    //signing
+    signing
 }
 
 group = "org.treexl"
@@ -26,12 +27,23 @@ repositories {
     jcenter()
 }
 
+signing {
+    useGpgCmd()
+    sign(configurations.archives.get())
+}
+
 val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
 
 val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
     dependsOn(dokkaHtml)
     archiveClassifier.set("javadoc")
     from(dokkaHtml.outputDirectory)
+}
+
+project.file("local.properties").takeIf { it.exists() }?.inputStream()?.use {
+    Properties().apply { load(it) }
+}?.forEach { (k, v) ->
+    project.setProperty(k.toString(), v.toString())
 }
 
 kotlin {
@@ -121,13 +133,16 @@ publishing {
                 url.set(projectGitUrl)
             }
         }
-        //the<SigningExtension>().sign(this)
+        the<SigningExtension>().sign(this)
     }
     repositories {
         maven {
             name = "sonatypeStaging"
-            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            credentials(PasswordCredentials::class)
+            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials {
+                username = project.property("ossrhUsername") as? String ?: error("Unknown user")
+                password = project.property("ossrhPassword") as? String ?: error("Unknown password")
+            }
         }
     }
 }
