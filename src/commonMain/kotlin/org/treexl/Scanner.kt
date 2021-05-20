@@ -74,7 +74,7 @@ internal class Scanner(private val source: CharSequence) {
                         identifier()
                     }
                     else -> {
-                        parseError("Unexpected character.")
+                        parseError("Unexpected character '$c'.")
                     }
                 }
             }

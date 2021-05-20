@@ -211,6 +211,28 @@ class TreexlTest {
     }
 
     @Test
+    fun testLike() {
+        assertEquals(
+            Binary(
+                Identifier("X"),
+                Token(TokenType.LIKE, "like"),
+                Literal("%x%")
+            ),
+            treexl.parse("X like '%x%'")
+        )
+    }
+
+    @Test
+    fun testErrorReporting() {
+        try {
+            treexl.parse("1 != 2")
+        } catch (e: ParseError) {
+            assertEquals("Parse error (1:3): Unexpected character '!'.", e.message)
+        }
+
+    }
+
+    @Test
     fun testGrouping() {
         assertEquals(Grouping(Literal(1)), treexl.parse("(1)"))
 

@@ -44,6 +44,7 @@ class TreexlSQLWhereGeneratorTest {
         assertInputEqualsOutput("X")
         assertInputEqualsOutput("X or Y")
         assertInputEqualsOutput("X = 1 or Y = 2")
+        assertInputEqualsOutput("X like '%x%'")
     }
 
     @Test

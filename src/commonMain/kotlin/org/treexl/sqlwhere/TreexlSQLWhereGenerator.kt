@@ -126,6 +126,9 @@ class SQLVisitor(private val appendable: Appendable, private val quoter: (Append
             TokenType.GREATER_EQUAL -> {
                 appendable.append(">=")
             }
+            TokenType.LIKE -> {
+                appendable.append("like")
+            }
 
             else -> error("Invalid binary operator: ${expression.operator}")
         }
