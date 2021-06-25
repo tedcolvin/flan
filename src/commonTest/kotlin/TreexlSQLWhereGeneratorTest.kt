@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 @ExperimentalStdlibApi
 class TreexlSQLWhereGeneratorTest {
 
-    val generator = TreexlSQLWhereGenerator()
+    private val generator = TreexlSQLWhereGenerator()
 
     @Test
     fun testSameExpression() {
@@ -45,6 +45,11 @@ class TreexlSQLWhereGeneratorTest {
         assertInputEqualsOutput("X or Y")
         assertInputEqualsOutput("X = 1 or Y = 2")
         assertInputEqualsOutput("X like '%x%'")
+        assertInputEqualsOutput("X is null")
+        assertInputEqualsOutput("X is not null")
+        assertInputEqualsOutput("f(x, y, z) and B = 2")
+        assertInputEqualsOutput("B = 2 and A in (1)")
+        assertInputEqualsOutput("A in (1) and B = 2")
     }
 
     @Test

@@ -16,6 +16,7 @@ package org.treexl
 import org.treexl.rewriters.LiteralToParameterRewriter
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class TreexlTest {
 
@@ -219,6 +220,85 @@ class TreexlTest {
                 Literal("%x%")
             ),
             treexl.parse("X like '%x%'")
+        )
+    }
+
+    @Test
+    fun testIn() {
+        assertEquals(
+            Binary(
+                Identifier("A"),
+                Token(TokenType.IN, "in"),
+                ExprList(listOf(
+                    Literal(1),
+                    Literal(2),
+                    Literal(3),
+                ))
+            ),
+            treexl.parse("A in (1, 2, 3)")
+        )
+
+        try {
+            treexl.parse("A in 1, 2, 3")
+        } catch (e: ParseError) {
+            assertEquals("Parse error (line: 1) at ',': Expected '(' or range  '<start> .. <end>' after 'in' expression.", e.message)
+        }
+
+        assertNotNull(treexl.parse("A in 1..3"))
+
+        val actual = treexl.parse("A in (1) and 1 = 1")
+        assertEquals(
+            Binary(
+                treexl.parse("A in (1)"),
+                Token(TokenType.AND, "and"),
+                treexl.parse("1 = 1"),
+            ),
+            actual
+        )
+
+    }
+
+    @Test
+    fun testParams() {
+        assertEquals(
+            Binary(
+                Literal(1),
+                Token(TokenType.EQUAL, "="),
+                Literal("1")
+            ),
+            treexl.parse("1 = '1'")
+        )
+    }
+
+    @Test
+    fun testBetweenError() {
+        try {
+            treexl.parse("a between 5 and 7")
+        } catch (e: ParseError) {
+            assertEquals("Parse error (line: 1) at 'between': 'like' operator not supported. Use 'in with ranges' instead ('<expr> in <start>..<end>').", e.message)
+        }
+    }
+
+    @Test
+    fun testKeyworkCasing() {
+        try {
+            treexl.parse("(1 < 2 AND '1' = '1')")
+        } catch (e: ParseError) {
+            assertEquals("Parse error (1:10): Invalid keyword 'AND': keywords are case sensitive (lowercase only). Use 'and' instead.", e.message)
+        }
+    }
+
+    @Test
+    fun testParens() {
+        assertEquals(
+            Grouping(
+                Binary(
+                    Literal(1),
+                    Token(TokenType.EQUAL, "="),
+                    Literal("1")
+                ),
+            ),
+            treexl.parse("(1 = '1')")
         )
     }
 

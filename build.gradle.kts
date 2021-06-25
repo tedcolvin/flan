@@ -100,13 +100,18 @@ kotlin {
     }
 }
 
+tasks.withType<Sign> {
+    //sign only if keyName is set
+    onlyIf { !(project.property("signing.gnupg.keyName") as String?).isNullOrEmpty() }
+}
+
 publishing {
     publications.withType<MavenPublication> {
         artifact(javadocJar)
         pom {
             val projectGitUrl = "https://github.com/tedcolvin/treexl"
             name.set(rootProject.name)
-            description.set("Flan - Filter Language")
+            description.set("Treexl - Tree Extensible EXpression Language")
             url.set(projectGitUrl)
             inceptionYear.set("2021")
             licenses {

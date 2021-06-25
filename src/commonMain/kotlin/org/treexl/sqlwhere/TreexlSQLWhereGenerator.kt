@@ -15,6 +15,7 @@ package org.treexl.sqlwhere
 
 import org.treexl.Binary
 import org.treexl.Call
+import org.treexl.ExprList
 import org.treexl.Expression
 import org.treexl.Grouping
 import org.treexl.Identifier
@@ -126,6 +127,9 @@ class SQLVisitor(private val appendable: Appendable, private val quoter: (Append
             TokenType.GREATER_EQUAL -> {
                 appendable.append(">=")
             }
+            TokenType.IS -> {
+                appendable.append("is")
+            }
             TokenType.LIKE -> {
                 appendable.append("like")
             }
@@ -166,6 +170,10 @@ class SQLVisitor(private val appendable: Appendable, private val quoter: (Append
         }
 
         appendable.append(")")
+    }
+
+    override fun visit(expression: ExprList) {
+        TODO("Not yet implemented")
     }
 }
 

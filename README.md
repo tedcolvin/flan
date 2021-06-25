@@ -25,8 +25,8 @@ problem is that leads to some sort of custom "ad-hoc", half-baked solution that 
 and not powerfull enough.
 
 With Treexl is possible to support a large (safe) subset o 'SQL where', including the ability to generate
-the actual 'SQL where' expression that is sent to the database, without gotchas like SQL Injection but without
-compromising the performance.
+the actual 'SQL where' expression that is sent to the database, avoiding gotchas like SQL Injection without
+compromising the performance of database native queries.
 
 ## License
 

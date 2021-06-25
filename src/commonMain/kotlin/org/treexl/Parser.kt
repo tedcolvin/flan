@@ -8,7 +8,7 @@
  *
  * See the LICENSE file distributed with this work for
  *  additional information regarding copyright ownership.
- *
+ *eita
  */
 
 package org.treexl
@@ -42,14 +42,41 @@ class Parser(private val tokens: List<Token>) {
     private fun previous(): Token {
         return tokens[current - 1]
     }
+
     private fun equality(): Expression {
         var expr = comparison()
-        while (match(TokenType.DIFFERENT, TokenType.EQUAL, TokenType.IS, TokenType.IN, TokenType.LIKE)) {
+
+        while (match(TokenType.DIFFERENT, TokenType.EQUAL, TokenType.IS, TokenType.IN, TokenType.LIKE, TokenType.BETWEEN)) {
             val operator = previous()
-            val right = comparison()
+
+            val right = when (operator.type) {
+                TokenType.IN -> {
+                    if (match(TokenType.LEFT_PAREN)) {
+                        val arguments = finishCall()
+                        consume(
+                            TokenType.RIGHT_PAREN,
+                            "Expect ')' after arguments."
+                        )
+                        ExprList(arguments)
+                    } else {
+                        range()
+                    }
+                }
+                TokenType.BETWEEN -> parseError(operator, "'like' operator not supported. Use 'in with ranges' instead ('<expr> in <start>..<end>').")
+                else -> {
+                    comparison()
+                }
+            }
             expr = Binary(expr, operator, right)
         }
+
         return expr
+    }
+
+    private fun range(): Expression {
+        val expression = unary() //check for 'not'
+        val range = consume(TokenType.RANGE, "Expected '(' or range  '<start> .. <end>' after 'in' expression.")
+        return Binary(expression, range, unary())
     }
 
     private fun check(type: TokenType): Boolean {
@@ -68,7 +95,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun consume(type: TokenType, message: String): Token {
         if (check(type)) return advance()
-        throw error(peek(), message)
+        parseError(peek(), message)
     }
 
     private fun comparison(): Expression {
@@ -122,7 +149,12 @@ class Parser(private val tokens: List<Token>) {
 
         if (expression is Identifier) {
             if (match(TokenType.LEFT_PAREN)) {
-                return finishCall(expression)
+                val arguments = finishCall()
+                val paren = consume(
+                    TokenType.RIGHT_PAREN,
+                    "Expect ')' after arguments."
+                )
+                return Call(expression, paren, arguments)
             }
 
         }
@@ -149,29 +181,25 @@ class Parser(private val tokens: List<Token>) {
             return Grouping(expr)
         }
 
-        throw error(peek(), "Expect expression.")
+        parseError(peek(), "Expect expression.")
     }
 
-    private fun finishCall(callee: Identifier): Expression {
+    private fun finishCall(): List<Expression> {
         val arguments = mutableListOf<Expression>()
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
                 arguments.add(expression())
             } while (match(TokenType.COMMA))
         }
-        val paren = consume(
-            TokenType.RIGHT_PAREN,
-            "Expect ')' after arguments."
-        )
-        return Call(callee, paren, arguments)
+        return arguments
     }
 
-    private fun error(token: Token, message: String): ParseError {
+    private fun parseError(token: Token, message: String): Nothing {
         val msg = if (token.type === TokenType.EOF) {
-            "$[{token.line}] EOF: $message"
+            "Parse error (line: ${token.line}) EOF: $message"
         } else {
-            "[${token.line}] at '${token.lexeme}: '$message"
+            "Parse error (line: ${token.line}) at '${token.lexeme}': $message"
         }
-        return ParseError(msg)
+        throw ParseError(msg)
     }
 }
