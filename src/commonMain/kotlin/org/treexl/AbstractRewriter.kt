@@ -103,6 +103,6 @@ abstract class AbstractRewriter : Rewriter {
     }
 
     override fun rewrite(expression: ExprList): Expression {
-        TODO("Not yet implemented")
+        return expression
     }
 }

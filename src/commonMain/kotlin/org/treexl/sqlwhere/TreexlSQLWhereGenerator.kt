@@ -133,6 +133,16 @@ class SQLVisitor(private val appendable: Appendable, private val quoter: (Append
             TokenType.LIKE -> {
                 appendable.append("like")
             }
+            TokenType.IN -> {
+                if ((expression.right as? Binary)?.operator?.type == TokenType.RANGE) {
+                    appendable.append("between")
+                } else {
+                    appendable.append("in")
+                }
+            }
+            TokenType.RANGE -> {
+                appendable.append("and")
+            }
 
             else -> error("Invalid binary operator: ${expression.operator}")
         }
@@ -173,7 +183,17 @@ class SQLVisitor(private val appendable: Appendable, private val quoter: (Append
     }
 
     override fun visit(expression: ExprList) {
-        TODO("Not yet implemented")
+        appendable.append("(")
+        val lastIndex = expression.arguments.lastIndex
+
+        expression.arguments.forEachIndexed { i, arg ->
+            arg.visit(this)
+            if (i != lastIndex) {
+                appendable.append(",")
+            }
+        }
+
+        appendable.append(")")
     }
 }
 
