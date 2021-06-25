@@ -36,7 +36,7 @@ internal class Scanner(private val source: CharSequence) {
             '(' -> addToken(TokenType.LEFT_PAREN)
             ')' -> addToken(TokenType.RIGHT_PAREN)
             ',' -> addToken(TokenType.COMMA)
-            '.' -> addToken(TokenType.DOT)
+            '.' -> addToken(if (match('.')) TokenType.RANGE else TokenType.DOT)
             '=' -> addToken(TokenType.EQUAL)
             '-' -> addToken(TokenType.MINUS)
 
@@ -88,7 +88,7 @@ internal class Scanner(private val source: CharSequence) {
         tokens.add(Token(TokenType.PARAMETER, text, null, line))
     }
 
-    private fun parseError(s: String) {
+    private fun parseError(s: String): Nothing {
         throw ParseError("Parse error ($line:$current): $s")
     }
 
@@ -178,7 +178,16 @@ internal class Scanner(private val source: CharSequence) {
     private fun identifier() {
         while (isAlphaNumeric(peek())) advance()
         val text = source.substring(start, current)
-        addToken(TokenType[text] ?: TokenType.IDENTIFIER)
+
+        val tokenType = TokenType[text.toLowerCase()]
+        if (tokenType != null) {
+            if (tokenType.keyword != text) {
+                parseError("Invalid keyword '${text}': keywords are case sensitive (lowercase only). Use '${tokenType.keyword}' instead.")
+            }
+            addToken(tokenType)
+        } else {
+            addToken(TokenType.IDENTIFIER)
+        }
     }
 }
 

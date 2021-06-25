@@ -24,6 +24,15 @@ sealed class Expression {
 data class Literal<T>(val value: T) : Expression() {
     override fun visit(visitor: Visitor) = visitor.visit(this)
     override fun rewrite(visitor: Rewriter) = visitor.rewrite(this)
+
+    override fun toString(): String {
+        return if (value is String) {
+            "Literal(value=\"$value\")"
+        } else {
+            "Literal(value=$value)"
+        }
+    }
+
 }
 
 data class Grouping(val expression: Expression) : Expression() {
@@ -52,6 +61,11 @@ data class Parameter(val name: String) : Expression() {
 }
 
 data class Call(val identifier: Identifier, val token: Token, val arguments: List<Expression>) : Expression() {
+    override fun visit(visitor: Visitor) = visitor.visit(this)
+    override fun rewrite(visitor: Rewriter) = visitor.rewrite(this)
+}
+
+data class ExprList(val arguments: List<Expression>) : Expression() {
     override fun visit(visitor: Visitor) = visitor.visit(this)
     override fun rewrite(visitor: Rewriter) = visitor.rewrite(this)
 }

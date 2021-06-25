@@ -29,4 +29,6 @@ interface Rewriter {
 
     fun rewrite(expression: Call): Expression
 
+    fun rewrite(expression: ExprList): Expression
+
 }

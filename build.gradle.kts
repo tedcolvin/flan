@@ -106,7 +106,7 @@ publishing {
         pom {
             val projectGitUrl = "https://github.com/tedcolvin/treexl"
             name.set(rootProject.name)
-            description.set("Flan - Filter Language")
+            description.set("Treexl - Tree Extensible EXpression Language")
             url.set(projectGitUrl)
             inceptionYear.set("2021")
             licenses {

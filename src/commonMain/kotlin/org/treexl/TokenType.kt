@@ -19,7 +19,7 @@ enum class TokenType(val keyword: String? = null) {
     LEFT_PAREN, RIGHT_PAREN, COMMA, DOT,
 
     // One or two character tokens.
-    EQUAL, DIFFERENT, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
+    EQUAL, DIFFERENT, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, RANGE,
 
     IDENTIFIER,
 
@@ -61,6 +61,8 @@ enum class TokenType(val keyword: String? = null) {
                 kw to type
             }
         }.toMap()
+
+
     }
 
 }

@@ -45,6 +45,8 @@ class TreexlSQLWhereGeneratorTest {
         assertInputEqualsOutput("X or Y")
         assertInputEqualsOutput("X = 1 or Y = 2")
         assertInputEqualsOutput("X like '%x%'")
+        assertInputEqualsOutput("X is null")
+        assertInputEqualsOutput("X is not null")
     }
 
     @Test
