@@ -68,6 +68,21 @@ class TreexlSQLWhereGeneratorTest {
         assertEquals("A = B and C < D", appendable.toString())
     }
 
+    @Test
+    fun testBetweenAndIn() {
+        val treexl = Treexl(Treexl.Options(emptyList()))
+        val appendable = StringBuilder()
+
+        val betweenClause = "A in 1..10"
+        generator.appendSQL(appendable, treexl.parse(betweenClause))
+        assertEquals("A between 1 and 10", appendable.toString())
+
+        appendable.setLength(0)
+        val inClause = "A in (1,4,10,19)"
+        generator.appendSQL(appendable, treexl.parse(inClause))
+        assertEquals("A in (1,4,10,19)", appendable.toString())
+    }
+
     private fun assertInputEqualsOutput(s: String) {
         assertEquals(s, generator.parse(s))
     }
