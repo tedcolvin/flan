@@ -163,6 +163,13 @@ class Parser(private val tokens: List<Token>) {
 
     private fun identifier(): Expression {
         if (match(TokenType.IDENTIFIER)) {
+            val expression = Identifier(previous().lexeme)
+            if (match(TokenType.DOT)) {
+                val expr2 = identifier()
+                if (expr2 is Identifier) {
+                    return Identifier("${expression.name}.${expr2.name}")
+                }
+            }
             return Identifier(previous().lexeme)
         }
         return primary()
