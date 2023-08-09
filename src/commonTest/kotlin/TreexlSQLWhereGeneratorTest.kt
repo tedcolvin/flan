@@ -50,6 +50,9 @@ class TreexlSQLWhereGeneratorTest {
         assertInputEqualsOutput("f(x, y, z) and B = 2")
         assertInputEqualsOutput("B = 2 and A in (1)")
         assertInputEqualsOutput("A in (1) and B = 2")
+        assertInputEqualsOutput("a.B = 1 and a.C like 'a'")
+        assertInputEqualsOutput("c.A in (1) and d.B = 2")
+        assertInputEqualsOutput("c.d.A in (1) and e.f.g.B = 2")
     }
 
     @Test

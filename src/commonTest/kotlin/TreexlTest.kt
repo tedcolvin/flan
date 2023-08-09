@@ -49,6 +49,13 @@ class TreexlTest {
         assertScanAs("123.0", Token(TokenType.NUMBER, "123.0", literal = 123.0))
 
         assertScanAs(
+            "a.b",
+            Token(TokenType.IDENTIFIER, "a"),
+            Token(TokenType.DOT, "."),
+            Token(TokenType.IDENTIFIER, "b")
+        )
+
+        assertScanAs(
             "()",
             Token(TokenType.LEFT_PAREN, "("),
             Token(TokenType.RIGHT_PAREN, ")")
@@ -220,6 +227,18 @@ class TreexlTest {
                 Literal("%x%")
             ),
             treexl.parse("X like '%x%'")
+        )
+    }
+
+    @Test
+    fun testIdentifiers() {
+        assertEquals(
+            Binary(
+                Identifier("a.b.C"),
+                Token(TokenType.EQUAL, "="),
+                Identifier("x.Y")
+            ),
+            treexl.parse("a.b.C = x.Y")
         )
     }
 
