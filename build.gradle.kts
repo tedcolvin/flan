@@ -40,7 +40,7 @@ val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
     from(dokkaHtml.outputDirectory)
 }
 
-project.file("local.properties").takeIf { it.exists() }?.inputStream()?.use {
+project.file("gradle-local.properties").takeIf { it.exists() }?.inputStream()?.use {
     Properties().apply { load(it) }
 }?.forEach { (k, v) ->
     project.setProperty(k.toString(), v.toString())
