@@ -389,4 +389,34 @@ class TreexlTest {
 
     }
 
+    @Test
+    fun testParseWithRewrite() {
+
+        val values = mutableListOf<Any?>()
+        val rewriter1 = LiteralToParameterRewriter {
+            values.add(it)
+            "_${values.size}"
+        }
+
+        val treexl = Treexl(Treexl.Options(rewriters = listOf(rewriter1)))
+
+        val lowercaseRewriter = object : AbstractRewriter() {
+            override fun rewrite(expression: Identifier): Expression {
+                return if (expression.name.any { it.toLowerCase() != it }) {
+                    Identifier(expression.name.toLowerCase())
+                } else {
+                    expression
+                }
+            }
+        }
+
+        assertEquals(
+            Treexl().parse("a > :_1 and (b <> :_2 or c = :_3)"),
+            treexl.parse("A > 1 and (B <> '2' or C = null)", lowercaseRewriter)
+        )
+
+        assertEquals(listOf<Any?>(1, "2", null), values)
+
+    }
+
 }

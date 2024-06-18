@@ -26,15 +26,24 @@ class Treexl(private val options: Options = Options()) {
     )
 
     fun parse(strExpr: String): Expression {
+        return parse(strExpr, *emptyArray())
+    }
+
+    fun parse(strExpr: String, vararg rewriters: Rewriter): Expression {
         if (strExpr.isBlank()) {
             throw ParseError("Expression is blank (\"\").")
         }
         val tokens = Scanner(strExpr).scanTokens()
         val expression = Parser(tokens).parse()
 
-        return options.rewriters.fold(expression) { expr, rewriteVisitor ->
+        val expr1 = options.rewriters.fold(expression) { expr, rewriteVisitor ->
+            expr.rewrite(rewriteVisitor)
+        }
+        
+        return rewriters.fold(expr1) { expr, rewriteVisitor ->
             expr.rewrite(rewriteVisitor)
         }
     }
+
 }
 
